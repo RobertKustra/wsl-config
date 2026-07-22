@@ -127,7 +127,7 @@ if [ -x "$BREW_BIN" ]; then
   sudo -u "$USER_NAME" bash -lc "eval '$($BREW_BIN shellenv)' && brew tap fluxcd/tap"
 
   echo "Installing available Homebrew packages..."
-  for pkg in git curl wget zsh tmux neovim python libpq htop ripgrep fd fzf bat jq awscli k9s docker minikube kubectl; do
+  for pkg in git curl wget zsh tmux neovim python libpq htop ripgrep fd fzf bat jq awscli k9s docker minikube kubectl gh; do
     sudo -u "$USER_NAME" bash -lc "eval '$($BREW_BIN shellenv)' && if brew list --formula \"$pkg\" >/dev/null 2>&1; then echo 'Homebrew package $pkg already installed.'; else brew install \"$pkg\"; fi"
   done
 
