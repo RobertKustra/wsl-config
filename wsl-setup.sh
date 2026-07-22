@@ -40,6 +40,23 @@ apt update
 echo "Installing prerequisite packages..."
 apt install -y build-essential curl file tilix
 
+echo "Configuring inotify and file descriptor limits..."
+INOTIFY_SYSCTL_FILE="/etc/sysctl.d/99-sandbox-inotify.conf"
+cat > "$INOTIFY_SYSCTL_FILE" <<'EOF'
+# Raise watcher and instance limits to avoid fsnotify "too many open files".
+fs.inotify.max_user_watches=524288
+fs.inotify.max_user_instances=2048
+fs.inotify.max_queued_events=32768
+EOF
+sysctl --system >/dev/null 2>&1 || echo "Warning: could not apply sysctl settings immediately; they will apply on next boot."
+
+NOFILE_LIMITS_FILE="/etc/security/limits.d/99-sandbox-nofile.conf"
+cat > "$NOFILE_LIMITS_FILE" <<EOF
+$USER_NAME soft nofile 1048576
+$USER_NAME hard nofile 1048576
+EOF
+echo "Wrote limit files: $INOTIFY_SYSCTL_FILE and $NOFILE_LIMITS_FILE"
+
 echo "Installing Docker Engine (if not present)..."
 if ! command -v docker >/dev/null 2>&1; then
   apt install -y ca-certificates gnupg lsb-release
@@ -169,6 +186,8 @@ done
 echo "\nSUMMARY:"
 echo "  sudoers file created or updated: $FILE"
 echo "  apt packages installed/verified: build-essential curl file tilix"
+echo "  inotify tuned: fs.inotify.max_user_watches=524288, fs.inotify.max_user_instances=2048"
+echo "  nofile tuned for $USER_NAME: soft/hard 1048576"
 echo "  Homebrew status: checked or installed for $USER_NAME"
 echo "  Homebrew profile updated: $BREW_PROFILE$( [ -f \"$ZSH_PROFILE\" ] && printf ' and %s' "$ZSH_PROFILE")"
 echo "  Homebrew tap enabled: fluxcd/tap"

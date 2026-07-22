@@ -61,3 +61,13 @@ eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 - If the script fails because it cannot determine the normal user, rerun it as `sudo ./wsl-setup.sh` from your normal user session.
 - If `systemctl` is unavailable in your WSL distribution, Docker may need to be started manually.
 - If Homebrew install is skipped due to missing binary, check the output for the cause and verify the `brew` path in `/home/linuxbrew/.linuxbrew/bin/brew`.
+- If you see `failed to create fsnotify watcher: too many open files`, rerun the setup script. It now writes:
+	- `/etc/sysctl.d/99-sandbox-inotify.conf` with higher inotify limits
+	- `/etc/security/limits.d/99-sandbox-nofile.conf` with higher `nofile` limits for your user
+
+Verify current limits:
+
+```bash
+sysctl fs.inotify.max_user_watches fs.inotify.max_user_instances fs.inotify.max_queued_events
+ulimit -n
+```
