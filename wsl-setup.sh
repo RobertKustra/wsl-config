@@ -74,6 +74,32 @@ else
   echo "Docker CLI already present; skipping Docker Engine install."
 fi
 
+if command -v nvidia-smi >/dev/null 2>&1; then
+  echo "NVIDIA GPU detected. Installing NVIDIA Container Toolkit for Docker GPU passthrough..."
+  apt install -y curl gnupg ca-certificates
+  curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor -o /etc/apt/keyrings/nvidia-container-toolkit-keyring.gpg
+  curl -fsSL https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+    sed 's#deb https://#deb [signed-by=/etc/apt/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' \
+    > /etc/apt/sources.list.d/nvidia-container-toolkit.list
+  apt update
+  apt install -y nvidia-container-toolkit
+  nvidia-ctk runtime configure --runtime=docker
+  if command -v systemctl >/dev/null 2>&1; then
+    systemctl restart docker || echo "Warning: could not restart Docker via systemctl; restart it manually if needed."
+  else
+    echo "systemctl not available; Docker may need a manual restart after NVIDIA runtime configuration."
+  fi
+
+  echo "Validating NVIDIA Docker runtime..."
+  if sudo -u "$USER_NAME" sh -lc 'docker run --rm --gpus all nvidia/cuda:12.4.1-base-ubuntu22.04 nvidia-smi >/dev/null 2>&1'; then
+    echo "NVIDIA Docker runtime validation passed."
+  else
+    echo "Warning: NVIDIA Docker runtime validation failed. Re-run the GPU test after restarting Docker and confirming the driver is active."
+  fi
+else
+  echo "No NVIDIA GPU driver detected in WSL. Skipping NVIDIA Container Toolkit installation. Minikube GPU workloads will not work without a CUDA-capable NVIDIA GPU and toolkit."
+fi
+
 echo "Adding $USER_NAME to docker group (may require logout/login)..."
 usermod -aG docker "$USER_NAME" || true
 
