@@ -38,7 +38,7 @@ echo "Updating package lists..."
 apt update
 
 echo "Installing prerequisite packages..."
-apt install -y build-essential curl file tilix
+apt install -y build-essential curl file tilix libharfbuzz-gobject0
 
 echo "Configuring inotify and file descriptor limits..."
 INOTIFY_SYSCTL_FILE="/etc/sysctl.d/99-sandbox-inotify.conf"
@@ -176,6 +176,9 @@ if [ -x "$BREW_BIN" ]; then
 
   echo "Installing Flux from fluxcd/tap..."
   sudo -u "$USER_NAME" bash -lc "eval '$($BREW_BIN shellenv)' && if brew list --formula flux >/dev/null 2>&1; then echo 'Homebrew package flux already installed.'; else brew install fluxcd/tap/flux; fi"
+
+  echo "Installing flux9s from dgunzy/tap..."
+  sudo -u "$USER_NAME" bash -lc "eval '$($BREW_BIN shellenv)' && if brew list --formula flux9s >/dev/null 2>&1; then echo 'Homebrew package flux9s already installed.'; else brew install dgunzy/tap/flux9s; fi"
 else
   echo "Warning: Homebrew binary not found at $BREW_BIN, skipping brew package installation." >&2
 fi
@@ -216,8 +219,8 @@ echo "  inotify tuned: fs.inotify.max_user_watches=524288, fs.inotify.max_user_i
 echo "  nofile tuned for $USER_NAME: soft/hard 1048576"
 echo "  Homebrew status: checked or installed for $USER_NAME"
 echo "  Homebrew profile updated: $BREW_PROFILE$( [ -f \"$ZSH_PROFILE\" ] && printf ' and %s' "$ZSH_PROFILE")"
-echo "  Homebrew tap enabled: fluxcd/tap"
-echo "  Homebrew packages installed/verified: git curl wget zsh tmux neovim python libpq htop ripgrep fd fzf bat jq awscli k9s docker minikube kubectl flux"
+echo "  Homebrew tap enabled: fluxcd/tap and dgunzy/tap"
+echo "  Homebrew packages installed/verified: git curl wget zsh tmux neovim python libpq htop ripgrep fd fzf bat jq awscli k9s docker minikube kubectl flux flux9s"
 echo "  kubectx state: $KUBECTX_DIR exists or was cloned"
 echo "  symlinks ensured: /usr/local/bin/kubectx and /usr/local/bin/kubens"
 
